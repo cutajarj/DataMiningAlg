@@ -1,7 +1,13 @@
 @()
 
 @main("Welcome to Play") {
+    <svg id="plotSvg"></svg>
+    <svg id="controls">
+        <circle r="20" cy="25" cx="100" id="sendCircle"></circle>
+
+        <circle r="20" cy="25" cx="500" id="backCircle"></circle>
+        <circle r="20" cy="25" cx="600" id="forwardCircle"></circle>
+    </svg>
     <script src="@routes.Assets.versioned("javascripts/d3.v3.min.js")" charset="utf-8"></script>
     <script src="@routes.Assets.versioned("javascripts/main.js")" type="text/javascript"></script>
-
 }

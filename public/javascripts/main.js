@@ -1,14 +1,22 @@
 var w = window.innerWidth - 20,
     h = window.innerHeight - 100,
-    margin = { top: 20, right: 20, bottom: 25, left: 25 },
+    margin = {top: 20, right: 20, bottom: 25, left: 25},
     radius = 6;
 
-var svg = d3.select("body").append("svg").attr({
+var svg = d3.select("#plotSvg").attr({
     width: w,
     height: h
 });
 
+d3.select("#controls").attr({
+    width: w,
+    height: 60
+});
+
 var dataset = [];
+
+var datasetInSteps = [];
+var pointerToSteps = 0;
 
 // We're passing in a function in d3.max to tell it what we're maxing (x value)
 var xScale = d3.scale.linear()
@@ -25,11 +33,14 @@ var xAxis = d3.svg.axis().scale(xScale).orient("bottom");
 var yAxis = d3.svg.axis().scale(yScale).orient("left");
 
 var circleAttrs = {
-    cx: function(d) { return xScale(d.x); },
-    cy: function(d) { return yScale(d.y); },
+    cx: function (d) {
+        return xScale(d.x);
+    },
+    cy: function (d) {
+        return yScale(d.y);
+    },
     r: radius
 };
-
 
 // Adds X-Axis as a 'g' element
 svg.append("g").attr({
@@ -52,13 +63,13 @@ svg.selectAll("circle")
     .on("mouseout", handleMouseOut);
 
 // On Click, we want to add data to the array and chart
-svg.on("click", function() {
+svg.on("click", function () {
     var coords = d3.mouse(this);
 
     // Normally we go from data to pixels, but here we're doing pixels to data
-    var newData= {
-        x: Math.round( xScale.invert(coords[0])),  // Takes the pixel number to convert to number
-        y: Math.round( yScale.invert(coords[1]))
+    var newData = {
+        x: Math.round(xScale.invert(coords[0])),  // Takes the pixel number to convert to number
+        y: Math.round(yScale.invert(coords[1]))
     };
 
     dataset.push(newData);   // Push data to our array
@@ -70,6 +81,36 @@ svg.on("click", function() {
         .attr(circleAttrs)  // Get attributes from circleAttrs var
         .on("mouseover", handleMouseOver)
         .on("mouseout", handleMouseOut);
+});
+
+d3.selectAll("#forwardCircle").on("click", function () {
+    svg.selectAll("circle")  // For new circle, go through the update process
+        .remove();
+
+    pointerToSteps++;
+
+    repaintChart();
+});
+
+d3.selectAll("#backCircle").on("click", function () {
+    svg.selectAll("circle")  // For new circle, go through the update process
+        .remove();
+
+    pointerToSteps--;
+
+    repaintChart();
+});
+
+
+d3.selectAll("#sendCircle").on("click", function () {
+    d3.xhr("computeKMeans")
+        .header("Content-Type", "application/json")
+        .post(JSON.stringify(dataset), function (error, newData) {
+            console.log(dataset);
+            datasetInSteps = JSON.parse(newData.response);   // Push data to our array
+            pointerToSteps = 1;
+            repaintChart();
+        });
 });
 
 // Create Event Handlers for mouse
@@ -84,10 +125,14 @@ function handleMouseOver(d, i) {  // Add interactivity
     // Specify where to put label of text
     svg.append("text").attr({
         id: "t" + d.x + "-" + d.y + "-" + i,  // Create an id for text so we can select it later for removing on mouseout
-        x: function() { return xScale(d.x) - 30; },
-        y: function() { return yScale(d.y) - 15; }
+        x: function () {
+            return xScale(d.x) - 30;
+        },
+        y: function () {
+            return yScale(d.y) - 15;
+        }
     })
-        .text(function() {
+        .text(function () {
             return [d.x, d.y];  // Value of the text
         });
 }
@@ -103,3 +148,15 @@ function handleMouseOut(d, i) {
     d3.select("#t" + d.x + "-" + d.y + "-" + i).remove();  // Remove text location
 }
 
+function repaintChart() {
+    svg.selectAll("circle")  // For new circle, go through the update process
+        .remove();
+
+    svg.selectAll("circle")
+        .data(datasetInSteps[pointerToSteps])
+        .enter()
+        .append("circle")
+        .attr(circleAttrs)  // Get attributes from circleAttrs var
+        .on("mouseover", handleMouseOver)
+        .on("mouseout", handleMouseOut);
+}
