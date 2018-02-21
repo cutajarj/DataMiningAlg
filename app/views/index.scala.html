@@ -1,14 +1,23 @@
 @()
 
 @main("Welcome to Play") {
+    <span id="selector">
+        <select id="inds">
+            <option value="2" selected="selected">2 Groups</option>
+            <option value="3">3 Groups</option>
+            <option value="4">4 Groups</option>
+        </select>
+    </span>
     <svg id="plotSvg"></svg>
-    <svg id="controls">
-        <circle r="20" cy="25" cx="100" id="sendCircle"></circle>
-        <polygon points="415,10 415,40 385, 25" id="backCircle"></polygon>
-        <line x1="450" y1="25" x2="850" y2="25" id="sliderLine"></line>
-        <line x1="450" y1="15" x2="450" y2="35" id="progressLine"></line>
-        <polygon points="885,10 885,40 915, 25" id="forwardCircle"></polygon>
-    </svg>
+    <span id="contr">
+        <svg id="controls">
+            <polygon points="100,10 140,10 120,40" id="sendCircle"></polygon>
+            <polygon points="415,10 415,40 385,25" id="backCircle"></polygon>
+            <line x1="450" y1="25" x2="850" y2="25" id="sliderLine"></line>
+            <line x1="450" y1="15" x2="450" y2="35" id="progressLine"></line>
+            <polygon points="885,10 885,40 915,25" id="forwardCircle"></polygon>
+        </svg>
+    </span>
     <script src="@routes.Assets.versioned("javascripts/d3.v3.min.js")" charset="utf-8"></script>
     <script src="@routes.Assets.versioned("javascripts/main.js")" type="text/javascript"></script>
 }

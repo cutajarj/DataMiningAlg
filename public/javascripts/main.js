@@ -1,7 +1,7 @@
 var w = window.innerWidth - 20,
-    h = window.innerHeight - 100,
-    margin = {top: 20, right: 20, bottom: 25, left: 25},
-    radius = 8;
+    h = window.innerHeight - 80,
+    margin = {top: 50, right: 20, bottom: 25, left: 25},
+    radius = 10;
 
 var svg = d3.select("#plotSvg").attr({
     width: w,
@@ -20,7 +20,7 @@ var pointerToSteps = 0;
 
 // We're passing in a function in d3.max to tell it what we're maxing (x value)
 var xScale = d3.scale.linear()
-    .domain([0, 100])
+    .domain([0, 200])
     .range([margin.left, w - margin.right]);  // Set margins for x specific
 
 // We're passing in a function in d3.max to tell it what we're maxing (y value)
@@ -39,7 +39,8 @@ var circleAttrs = {
     cy: function (d) {
         return yScale(d.y);
     },
-    r: radius
+    r: radius,
+    fill: "white"
 };
 
 var polyline1Attrs = {
@@ -50,7 +51,7 @@ var polyline1Attrs = {
 
 var polyline2Attrs = {
     points: function (d) {
-        return xScale(d.x - 1.5) + ", " + (yScale(d.y)) + " " + xScale(d.x + 1.5) + ", " + (yScale(d.y));
+        return xScale(d.x - 2) + ", " + (yScale(d.y)) + " " + xScale(d.x + 2) + ", " + (yScale(d.y));
     }
 };
 
@@ -116,12 +117,21 @@ d3.selectAll("#backCircle").on("click", function () {
 
 
 d3.selectAll("#sendCircle").on("click", function () {
+    var groupSelection = document.getElementById("inds");
+    var grpValue = groupSelection.options[groupSelection.selectedIndex].value;
+
+    var postStuff = {
+      numberOfGroups: parseInt(grpValue),
+      points: dataset
+    };
+
+    console.log(JSON.stringify(postStuff));
+
     d3.xhr("computeKMeans")
         .header("Content-Type", "application/json")
-        .post(JSON.stringify(dataset), function (error, newData) {
+        .post(JSON.stringify(postStuff), function (error, newData) {
             datasetInSteps = JSON.parse(newData.response);   // Push data to our array
-            console.log(datasetInSteps);
-            pointerToSteps = 1;
+            pointerToSteps = 0;
             repaintChart();
         });
 });
@@ -132,7 +142,7 @@ function handleMouseOver(d, i) {  // Add interactivity
     // Use D3 to select element, change color and size
     d3.select(this).attr({
         fill: "orange",
-        r: radius * 2
+        r: radius * 1.2
     });
 
     // Specify where to put label of text
@@ -143,7 +153,8 @@ function handleMouseOver(d, i) {  // Add interactivity
         },
         y: function () {
             return yScale(d.y) - 15;
-        }
+        },
+        fill: "white"
     })
         .text(function () {
             return [d.x, d.y];  // Value of the text
@@ -153,7 +164,7 @@ function handleMouseOver(d, i) {  // Add interactivity
 function handleMouseOut(d, i) {
     // Use D3 to select element, change color back to normal
     d3.select(this).attr({
-        fill: "black",
+        fill: "white",
         r: radius
     });
 
@@ -167,12 +178,12 @@ function repaintChart() {
     svg.selectAll("polyline")  // For new circle, go through the update process
         .remove();
 
-    var colors = ["red", "green", "blue"];
+    var colors = ["#FF6666", "#638BFF", "#63FFB6", "#FFE852"];
 
     for (i = 0; i < datasetInSteps[pointerToSteps].length; i++) {
 
         svg.selectAll("#circle" + i)
-            .data(datasetInSteps[pointerToSteps][i])
+            .data(datasetInSteps[pointerToSteps][i].slice(1))
             .enter()
             .append("circle")
             .attr(circleAttrs)  // Get attributes from circleAttrs var
@@ -189,7 +200,7 @@ function repaintChart() {
             .attr(polyline1Attrs)  // Get attributes from circleAttrs var
             .attr({
                 stroke: colors[i],
-                "stroke-width": 5
+                "stroke-width": 7
             });
 
         svg.selectAll("#polylineH" + i)
@@ -199,20 +210,17 @@ function repaintChart() {
             .attr(polyline2Attrs)  // Get attributes from circleAttrs var
             .attr({
                 stroke: colors[i],
-                "stroke-width": 5
+                "stroke-width": 7
             });
 
     }
 
-
     var multiplier = 400 / (datasetInSteps.length - 1);
-
-    console.log(450 + pointerToSteps * multiplier);
 
     d3.selectAll("#progressLine")
         .attr({
             x1: 450 + pointerToSteps * multiplier,
             x2: 450 + pointerToSteps * multiplier,
-            y1: 15, y2: 35
+            y1: 10, y2: 40
         });
 }

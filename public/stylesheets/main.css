@@ -13,6 +13,10 @@ body {
     shape-rendering: crispEdges; /* Round any decimal pixels so it'll render nicely */
 }
 
+.axis text {
+    fill: white;
+}
+
 #sliderLine{
     stroke: white;
     stroke-width: 3;
@@ -32,3 +36,15 @@ body {
     stroke: white;
     fill: white;
 }
+
+#sendCircle {
+    stroke: white;
+    fill: white;
+}
+
+#selector {
+    position:absolute;
+    top:18px;
+    left:28px;
+}
+
