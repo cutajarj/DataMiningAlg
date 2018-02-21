@@ -2,10 +2,33 @@ body {
     margin: 0;
     font-family: sans-serif;
     font-size: 11px;
+    background-image: url("/assets/images/board.png");
+    background-color: #cccccc;
 }
 
 .axis path, .axis line {
     fill: none;
-    stroke: black;
+    stroke: white;
+    stroke-width: 2;
     shape-rendering: crispEdges; /* Round any decimal pixels so it'll render nicely */
+}
+
+#sliderLine{
+    stroke: white;
+    stroke-width: 3;
+}
+
+#progressLine{
+    stroke: white;
+    stroke-width: 6;
+}
+
+#forwardCircle {
+    stroke: white;
+    fill: white;
+}
+
+#backCircle {
+    stroke: white;
+    fill: white;
 }

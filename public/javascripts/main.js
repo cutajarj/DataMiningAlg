@@ -1,7 +1,7 @@
 var w = window.innerWidth - 20,
     h = window.innerHeight - 100,
     margin = {top: 20, right: 20, bottom: 25, left: 25},
-    radius = 6;
+    radius = 8;
 
 var svg = d3.select("#plotSvg").attr({
     width: w,
@@ -41,6 +41,19 @@ var circleAttrs = {
     },
     r: radius
 };
+
+var polyline1Attrs = {
+    points: function (d) {
+        return "" + xScale(d.x) + ", " + yScale(d.y - 2) + " " + xScale(d.x) + ", " + (yScale(d.y + 2));
+    }
+};
+
+var polyline2Attrs = {
+    points: function (d) {
+        return xScale(d.x - 1.5) + ", " + (yScale(d.y)) + " " + xScale(d.x + 1.5) + ", " + (yScale(d.y));
+    }
+};
+
 
 // Adds X-Axis as a 'g' element
 svg.append("g").attr({
@@ -84,21 +97,21 @@ svg.on("click", function () {
 });
 
 d3.selectAll("#forwardCircle").on("click", function () {
-    svg.selectAll("circle")  // For new circle, go through the update process
-        .remove();
-
-    pointerToSteps++;
-
-    repaintChart();
+    if (pointerToSteps < (datasetInSteps.length - 1)) {
+        svg.selectAll("circle")  // For new circle, go through the update process
+            .remove();
+        pointerToSteps++;
+        repaintChart();
+    }
 });
 
 d3.selectAll("#backCircle").on("click", function () {
-    svg.selectAll("circle")  // For new circle, go through the update process
-        .remove();
-
-    pointerToSteps--;
-
-    repaintChart();
+    if (pointerToSteps > 0) {
+        svg.selectAll("circle")  // For new circle, go through the update process
+            .remove();
+        pointerToSteps--;
+        repaintChart();
+    }
 });
 
 
@@ -106,8 +119,8 @@ d3.selectAll("#sendCircle").on("click", function () {
     d3.xhr("computeKMeans")
         .header("Content-Type", "application/json")
         .post(JSON.stringify(dataset), function (error, newData) {
-            console.log(dataset);
             datasetInSteps = JSON.parse(newData.response);   // Push data to our array
+            console.log(datasetInSteps);
             pointerToSteps = 1;
             repaintChart();
         });
@@ -151,12 +164,55 @@ function handleMouseOut(d, i) {
 function repaintChart() {
     svg.selectAll("circle")  // For new circle, go through the update process
         .remove();
+    svg.selectAll("polyline")  // For new circle, go through the update process
+        .remove();
 
-    svg.selectAll("circle")
-        .data(datasetInSteps[pointerToSteps])
-        .enter()
-        .append("circle")
-        .attr(circleAttrs)  // Get attributes from circleAttrs var
-        .on("mouseover", handleMouseOver)
-        .on("mouseout", handleMouseOut);
+    var colors = ["red", "green", "blue"];
+
+    for (i = 0; i < datasetInSteps[pointerToSteps].length; i++) {
+
+        svg.selectAll("#circle" + i)
+            .data(datasetInSteps[pointerToSteps][i])
+            .enter()
+            .append("circle")
+            .attr(circleAttrs)  // Get attributes from circleAttrs var
+            .attr({
+                fill: colors[i]
+            })
+            .on("mouseover", handleMouseOver)
+            .on("mouseout", handleMouseOut);
+
+        svg.selectAll("#polylineV" + i)
+            .data([datasetInSteps[pointerToSteps][i][0]])
+            .enter()
+            .append("polyline")
+            .attr(polyline1Attrs)  // Get attributes from circleAttrs var
+            .attr({
+                stroke: colors[i],
+                "stroke-width": 5
+            });
+
+        svg.selectAll("#polylineH" + i)
+            .data([datasetInSteps[pointerToSteps][i][0]])
+            .enter()
+            .append("polyline")
+            .attr(polyline2Attrs)  // Get attributes from circleAttrs var
+            .attr({
+                stroke: colors[i],
+                "stroke-width": 5
+            });
+
+    }
+
+
+    var multiplier = 400 / (datasetInSteps.length - 1);
+
+    console.log(450 + pointerToSteps * multiplier);
+
+    d3.selectAll("#progressLine")
+        .attr({
+            x1: 450 + pointerToSteps * multiplier,
+            x2: 450 + pointerToSteps * multiplier,
+            y1: 15, y2: 35
+        });
 }
