@@ -1,0 +1,50 @@
+import scala.util.Random
+
+case class Point(x: Int, y: Int) {
+  def distanceTo(other: Point) =
+    math.sqrt(Math.pow(this.x - other.x, 2) + Math.pow(this.y - other.y, 2))
+}
+
+case class Cluster(centriod: Point, points: List[Point] = Nil)
+
+case class ClusterBatch(clusters: List[Cluster])
+
+def initialClusters(allPoints: List[Point], numbClusters: Int): List[Cluster] =
+  Random.shuffle(allPoints).take(numbClusters).map(Cluster(_))
+
+def reCenter(clusters: List[Cluster]): List[Cluster] = clusters.map { c =>
+  val xAvg = c.points.map(_.x).sum / c.points.size
+  val yAvg = c.points.map(_.y).sum / c.points.size
+  c.copy(centriod = Point(xAvg, yAvg))
+}
+
+val allPoints = List(Point(50, 50),
+  Point(55, 55),
+  Point(45, 50),
+  Point(95, 100),
+  Point(100, 95),
+  Point(98, 100))
+
+val clusterA = Cluster(Point(55,55))
+val clusterB = Cluster(Point(70,70))
+val clusters = List(clusterA, clusterB)
+
+allPoints.groupBy(p => clusters.minBy(_.centriod.distanceTo(p)))
+
+def assignment(allPoints: List[Point], clusters: List[Cluster]): List[Cluster] = {
+  val ptsByCluster = allPoints.groupBy(p => clusters.minBy(c => c.centriod.distanceTo(p)))
+  clusters.map(c => c.copy(points = ptsByCluster.getOrElse(c, Nil)))
+}
+
+def kMeans(allPoints: List[Point], numbClusters: Int): List[ClusterBatch] = {
+  val intialBatch = ClusterBatch(initialClusters(allPoints, numbClusters))
+  val steps = Stream.iterate(intialBatch) { pClusterBatch =>
+    val assignedClusters = assignment(allPoints, pClusterBatch.clusters)
+    val reCentered = reCenter(assignedClusters)
+    ClusterBatch(reCentered)
+  }
+
+  steps.zip(steps.tail).takeWhile { case (cBatch, pBatch) =>
+    cBatch.clusters.map(_.centriod) != pBatch.clusters.map(_.centriod)
+  }.map(_._1).toList
+}
